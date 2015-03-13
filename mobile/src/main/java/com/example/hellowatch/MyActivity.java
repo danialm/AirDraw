@@ -1,17 +1,23 @@
 package com.example.hellowatch;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.opengl.Matrix;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -25,49 +31,56 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
-import java.lang.reflect.Array;
+import java.io.File;
+import java.io.IOException;
+import java.lang.Boolean;
 import java.util.Date;
+import jxl.*;
+import jxl.write.*;
+import jxl.write.Number;
+
+import java.lang.reflect.Array;
 
 
 public class MyActivity extends ActionBarActivity implements
-        DataApi.DataListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        DataApi.DataListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
 
-    GoogleApiClient mGoogleApiClient;
-    DataMap dataMap;
-    int testId = R.id.test;
+    private GoogleApiClient mGoogleApiClient;
+    private DataMap dataMap;
+    private int testId = R.id.test;
     boolean run = false;
-    ImageView drawingImageView;
-    int[] currentPoint;
-    long currentTime;
-    float[] currentV;
-    float timeDiff;
-    Canvas canvas;
-    Bitmap bitmap;
-    Paint paint1;
-    Paint paint2;
-    Paint paint3;
-    Paint paint;
-    int c;
-    private float[] ab;
-    private boolean[] pos;
-    private boolean[] neg;
+    private ImageView drawingImageView;
+    private int[] currentPoint;
+    private long currentTime;
+    private float timeDiff;
+    private Canvas canvas;
+    private Bitmap bitmap;
+    private Paint paint1;
+    private Paint paint2;
+    private Paint paint3;
+    private Paint paint;
+    private int c;
+    private float[] addUpAcc;
+    private float[] velocity;
     private int[] d;
-    private long[] cd;
-    float distance[];
-    float init_vel[];
-    float current_acc[];
-    long [] startTime;
-    private final long wait = 1000;
+    private float init_vel[];
+    private long [] startTime;
     private boolean accFilFlag;
     private boolean velFilFlag;
-    private boolean absAcc1Flag;
-    private boolean linAcc1Flag;
     private boolean vel1Flag;
     private boolean absAcc2Flag;
     private boolean linAcc2Flag;
     private boolean vel2Flag;
     private boolean lineFlag;
     private boolean onBoard;
+    private Paint paint4;
+    private int dataCounter;
+    private WritableWorkbook workbook;
+    private WritableSheet worksheet;
+    private EditText letter;
+    private boolean touchFlag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +93,16 @@ public class MyActivity extends ActionBarActivity implements
                 .addOnConnectionFailedListener(this)
                 .build();
 
+        try {
+            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
+            worksheet = workbook.createSheet("First Sheet", 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        touchFlag =false;
+
+        letter = (EditText)findViewById(R.id.letter);
         resetDrawing();
     }
 
@@ -114,10 +137,9 @@ public class MyActivity extends ActionBarActivity implements
     public void onDataChanged(DataEventBuffer dataEvents) {
         for (DataEvent event : dataEvents) {
             if (event.getType() == DataEvent.TYPE_DELETED) {
-                Log.v("myTag", "DataItem deleted: " + event.getDataItem().getUri());
             } else if (event.getType() == DataEvent.TYPE_CHANGED) {
                 dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
-                //Log.v("myTag", "DataItem changed: " + dataMap);
+                //Log.v("data", dataMap.getBoolean("run")+"");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -156,127 +178,106 @@ public class MyActivity extends ActionBarActivity implements
         TextView t = (TextView) findViewById(id);
         t.setText(s);
     }
-    public void log(DataMap dataMap){
 
-        //Log.v("myTag", "Run: "+run+", "+dataMap.getBoolean("run")+" ct: "+currentTime+" td: "+timeDiff);
+    public boolean onTouchEvent(MotionEvent event){
+        int action = MotionEventCompat.getActionMasked(event);
 
-        long time = dataMap.getLong("time");
+        switch(action){
+            case (MotionEvent.ACTION_DOWN):
+                Log.v("TouchFlag", "true");
+                touchFlag = true;
+                break;
 
-        if(run == false && dataMap.getBoolean("run") == true){
-            resetDrawing();
+            case (MotionEvent.ACTION_UP):
+                Log.v("TouchFlag", "false");
+                touchFlag = false;
+                break;
         }
+        return super.onTouchEvent(event);
+    }
+
+    public void log(DataMap dataMap){
+        long time = dataMap.getLong("time");
 
         run = dataMap.getBoolean("run");
 
-        show("Run: "+run, R.id.act);
+        //show("Run: "+run, R.id.act);
 
         if(run == true){
-
+            dataCounter++;
             timeDiff = (time - currentTime)/1000f ;
 
-            Log.v("count","---------------------------");
+            float[] accRotated = new float[4];
+            float[] accNotRotated = new float[4];
+            float[] acc = dataMap.getFloatArray("acc");
+            float[] gyro = dataMap.getFloatArray("gyro");
 
-            if(timeDiff < 0.2 && timeDiff > 0){ //Reliable time diff
+            //float[] orgAcc = dataMap.getFloatArray("orgAcc");
+            double angle= dataMap.getDouble("angle");
+            double angle1= dataMap.getDouble("angle1");
+            double angle2= dataMap.getDouble("angle2");
+            float[] RotationM = {   (float)Math.cos(angle) , (float)Math.sin(angle), 0, 0,
+                                   -(float)Math.sin(angle) , (float)Math.cos(angle), 0, 0,
+                                    0                      , 0                     , 1, 0,
+                                    0                      , 0                     , 0, 0  };
+            System.arraycopy(acc,0,accNotRotated,0,3);
+            accNotRotated[3] = 0;
 
-                int[] nextPoint = new int[3];
-                float[] accV = dataMap.getFloatArray("acc");
-                float[] acc = new float[4];
-                float[] rotV = dataMap.getFloatArray("rot");
-                float[] accAbs = new float[4];
-                float[] rot = new float[16];
-                int[] dir;
-                long [] chDir;
-                long [] filChDir;
+            Matrix.multiplyMV(accRotated,0, RotationM,0, accNotRotated,0);
 
-                acc[0] = accV[0];
-                acc[1] = accV[1];
-                acc[2] = accV[2];
-                acc[3] = 0;
+            show("Press: "+touchFlag, testId);
+            //show("Angle: "+ (int) Math.round(Math.toDegrees(angle )), testId);
+            show("Angle: "+ (int) Math.round(Math.toDegrees(angle1)), R.id.act);
+            show("Angle: "+ (int) Math.round(Math.toDegrees(angle2)), R.id.onBoard);
 
-                Matrix.invertM(rot, 0, rotV, 0);
-                Matrix.multiplyMV(accAbs, 0, rot, 0, acc, 0);
+            for(int i=0;i<3;i++){
+                Number t = new Number(0, dataCounter, time);
+                Number a = new Number(i+2, dataCounter, gyro[i]);
+                Number b = new Number(i+6, dataCounter, acc[i]);
+                Label l1 = new Label(10, dataCounter, Boolean.toString(touchFlag));
+                Label l2 = new Label(12, dataCounter, letter.getText().toString());
 
-
-
-                for(int i=0;i<3;i++){
-                    //Log.v("time", i+ "=> "+"time: "+time+" startTime: "+startTime[i]);
-                    ab[i] = accAbs[i];
-                    if(accFilFlag) {
-                        if (time - startTime[i] > wait) {//pass the limited time!!!!
-                            if (Math.abs(accAbs[i]) > 1) {
-                                startTime[i] = time;
-                                if (accAbs[i] > 0) {
-                                    d[i] = 1;
-                                } else {
-                                    d[i] = -1;
-                                }
-                            }
-                        } else {//in the limited time!!!!
-                            if ((d[i] == 1 && accAbs[i] <= 0) || (d[i] == -1 && accAbs[i] >= 0)) {
-                                ab[i] = 0;
-                            }
-                        }
-                    }
-                    if(velFilFlag) {
-                        if (c % 10 == 0) {
-                            init_vel[i] = 0;
-                        }
-                    }
-                    float vel = init_vel[i] + (ab[i] * timeDiff);
-                    init_vel[i] = vel;
-                    nextPoint[i] = currentPoint[i] + (int) Math.round((vel * timeDiff + 0.5 * ab[i] * timeDiff * timeDiff) * 1000f);
+                try {
+                    worksheet.addCell(t);
+                    worksheet.addCell(a);
+                    worksheet.addCell(b);
+                    worksheet.addCell(l1);
+                    worksheet.addCell(l2);
+                } catch (WriteException e) {
+                    e.printStackTrace();
                 }
-                Log.v("z", "Current: "+currentPoint[2]+" Next: "+nextPoint[2]);
-                if(d[2] == 1){
-                    onBoard = false;
-                }else if(d[2] == -1){
-                    onBoard = true;
-                }
-               show("On Board: "+onBoard, R.id.onBoard);
-                if(absAcc1Flag)
-                    updateCanvas(ab, 1);
-                if(linAcc1Flag)
-                    updateCanvas(acc, 1);
-                if(vel1Flag)
-                    updateCanvas(init_vel, 1);
-                if(absAcc2Flag)
-                    updateCanvas(ab, 4);
-                if(linAcc2Flag)
-                    updateCanvas(acc, 4);
-                if(vel2Flag)
-                    updateCanvas(init_vel, 4);
-                if(lineFlag)
-                    canvas.drawLine(currentPoint[0], currentPoint[1], nextPoint[0], nextPoint[1], paint);
 
-                drawingImageView.setImageBitmap(bitmap);
-
-                for(int i=0;i<3;i++){
-                    ab[i] = accAbs[i];
-                    currentPoint[i] = nextPoint[i];
-                }
 
             }
+
+           //show("On Board: "+onBoard, R.id.onBoard);
+//            if(absAcc1Flag)
+//                updateCanvas(ab, 1);
+//            if(linAcc1Flag)
+                updateCanvas(gyro, 1);
+//            if(vel1Flag)
+//                updateCanvas(init_vel, 1);
+//            if(absAcc2Flag)
+//                updateCanvas(ab, 4);
+//            if(linAcc2Flag)
+                updateCanvas(acc, 4);
+//            if(vel2Flag)
+//                updateCanvas(init_vel, 4);
+
+            drawingImageView.setImageBitmap(bitmap);
+
             currentTime = time;
 
+        }else{//End of the session
+            drawVerticalLine();
+            dataCounter++;
         }
     }
 
     public void resetDrawing(){
-        Log.v("myTag", "Reset");
-        currentPoint = new int[3];
-        currentPoint[0] = 1000;
-        currentPoint[1] = 1000;
-        currentPoint[2] = 0;
         currentTime = 0;
-        current_acc = new float[3];
-        init_vel = new float[3];
         timeDiff = 0;
         c = 0;
-        pos = new boolean[3];
-        neg = new boolean[3];
-        ab = new float[3];
-        d = new int[3];
-        cd = new long[3];
         startTime = new long[3];
 
         drawingImageView = (ImageView) this.findViewById(R.id.draw);
@@ -287,38 +288,52 @@ public class MyActivity extends ActionBarActivity implements
         // Line
         paint = new Paint();
         paint.setColor(Color.BLACK);
-        paint.setStrokeWidth(6);
+        paint.setStrokeWidth(5);
 
         // Line
         paint1 = new Paint();
         paint1.setColor(Color.RED);
-        paint1.setStrokeWidth(6);
+        paint1.setStrokeWidth(5);
 
         // Line
         paint2 = new Paint();
         paint2.setColor(Color.argb(255,0,170,0));
-        paint2.setStrokeWidth(6);
+        paint2.setStrokeWidth(5);
 
         // Line
         paint3 = new Paint();
         paint3.setColor(Color.BLUE);
-        paint3.setStrokeWidth(6);
+        paint3.setStrokeWidth(5);
+
+        // Line
+        paint4 = new Paint();
+        paint4.setColor(Color.BLACK);
+        paint4.setStrokeWidth(2);
+
+
+        canvas.drawLine(0,300,2000,300,paint4);
+        canvas.drawLine(0,600,2000,600,paint4);
+        canvas.drawLine(0,900,2000,900,paint4);
+        canvas.drawLine(0,1200,2000,1200,paint4);
+        canvas.drawLine(0,1500,2000,1500,paint4);
+        canvas.drawLine(0,1800,2000,1800,paint4);
     }
     public void updateCanvas(float[] first,int num){
-        c++;
-        c++;
+        c+=2;
         if(c > 2000)
             resetDrawing();
         canvas.drawPoint(c, (int) Math.round(first[0] * 10) + (num*300), paint1);
         canvas.drawPoint(c, (int) Math.round(first[1] * 10) + (num*300+300), paint2);
         canvas.drawPoint(c, (int) Math.round(first[2] * 10) + (num*300+600), paint3);
     }
+    public void drawVerticalLine(){
+        canvas.drawLine(c,0,c,2000,paint4);
+        c+=3;
+    }
     public void setView(View v){
         accFilFlag = false;
         velFilFlag = false;
         lineFlag = false;
-        absAcc1Flag = false;
-        linAcc1Flag = false;
         vel1Flag = false;
         absAcc2Flag = false;
         linAcc2Flag = false;
@@ -330,12 +345,18 @@ public class MyActivity extends ActionBarActivity implements
         RadioGroup g2 = (RadioGroup) findViewById(R.id.g2);
         int g1Checked = g1.getCheckedRadioButtonId();
         int g2Checked = g2.getCheckedRadioButtonId();
+
+        try {
+            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
+            worksheet = workbook.createSheet("First Sheet", 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //dataCounter = 0;
         switch(g1Checked){
             case R.id.absAcc1:
-                absAcc1Flag = true;
                 break;
             case R.id.linAcc1:
-                linAcc1Flag = true;
                 break;
             case R.id.velocity1:
                 vel1Flag = true;
@@ -360,4 +381,17 @@ public class MyActivity extends ActionBarActivity implements
             lineFlag = true;
         resetDrawing();
     }
+
+    public void saveExcel(View view) {
+        dataCounter = 0;
+        try {
+            workbook.write();
+            workbook.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

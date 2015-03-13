@@ -1,5 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/mainView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -144,13 +145,51 @@
             </RadioGroup>
         </LinearLayout>
 
-        <Button
-            android:id="@+id/set"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_weight="3"
             android:layout_height="match_parent"
-            android:text="Set View"
-            android:onClick="setView"/>
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/set"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:text="Set View"
+                android:onClick="setView"/>
+
+            <EditText
+                android:id="@+id/letter"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <!--<EditText-->
+                <!--android:id="@+id/phone"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="0dp"-->
+                <!--android:layout_weight="1"-->
+                <!--android:inputType="phone"-->
+                <!--android:focusable="false"-->
+                <!--android:focusableInTouchMode="false" />-->
+
+            <Button
+                android:id="@+id/keyboard"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:text="Open KB"
+                android:onClick="openKeyboard"/>
+
+            <Button
+                android:id="@+id/save"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:text="Save Excel"
+                android:onClick="saveExcel"/>
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -158,8 +197,156 @@
         android:id="@+id/draw"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="9"
+        android:layout_weight="4"
         android:background="#ffc9c9c9"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.25"
+        android:orientation="horizontal"
+        android:weightSum="7"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:text="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.25"
+        android:orientation="horizontal"
+        android:weightSum="7"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:text="4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.25"
+        android:orientation="horizontal"
+        android:weightSum="7"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:text="7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="8"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        <TextView
+            android:text="9"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.25"
+        android:orientation="horizontal"
+        android:weightSum="7"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:text="0"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical|center_horizontal"
+            android:background="#ffc9c9c9"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+        </LinearLayout>
 </LinearLayout>
 <!--</RelativeLayout>-->
