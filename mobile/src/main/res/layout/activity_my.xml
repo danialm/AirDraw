@@ -1,194 +1,94 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/mainView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".MyActivity"
-        tools:deviceIds="wear_square"
-        android:weightSum="12">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MyActivity"
+    tools:deviceIds="wear_square"
+    android:weightSum="12">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
-        android:orientation="horizontal"
-        android:weightSum="12">
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:background="#aaffff"
-            android:weightSum="12">
+            android:background="#aaffff">
+
             <TextView
-                android:id="@+id/test"
+                android:id="@+id/test1"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:text="Initial"/>
 
             <TextView
-                android:id="@+id/act"
+                android:id="@+id/test2"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:text="Initial"/>
 
             <TextView
-                android:id="@+id/onBoard"
+                android:id="@+id/test3"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:text="Initial"/>
 
-            <CheckBox
-                android:id="@+id/accFil"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:text="Acc. Filter"/>
-
-            <CheckBox
-                android:id="@+id/velFil"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:text="Veloc. Filter"/>
-
-            <CheckBox
-                android:id="@+id/line"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"
-                android:text="Drawing Line"/>
-
         </LinearLayout>
-
 
         <LinearLayout
             android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:orientation="vertical"
-            android:weightSum="4"
-            android:background="#ffffaa">
-            <TextView
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/letter"
                 android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_height="0dp"
-                android:text="Graph 1"
-                android:textSize="18dp"
-                android:textColor="#000"
-                />
-            <RadioGroup
-                android:id="@+id/g1"
-                android:layout_width="match_parent"
-                android:layout_weight="3"
-                android:layout_height="0dp"
-                android:orientation="vertical">
-                <RadioButton android:id="@+id/linAcc1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Linear Acc."/>
-                <RadioButton android:id="@+id/absAcc1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Absolute Acc."/>
-                <RadioButton android:id="@+id/velocity1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Velocity"/>
-                <RadioButton android:id="@+id/none1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="None"/>
-            </RadioGroup>
+                android:hint="Label for data"/>
+
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:orientation="vertical"
-            android:weightSum="4"
-            android:background="#ffaaff">
-            <TextView
-                android:layout_width="match_parent"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/excel"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_height="0dp"
-                android:text="Graph 2"
-                android:textSize="18dp"
-                android:textColor="#000"
-                />
-            <RadioGroup
-                android:id="@+id/g2"
                 android:layout_width="match_parent"
-                android:layout_weight="3"
-                android:layout_height="0dp"
-                android:orientation="vertical">
-                <RadioButton android:id="@+id/linAcc2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Linear Acc."/>
-                <RadioButton android:id="@+id/absAcc2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Absolute Acc."/>
-                <RadioButton android:id="@+id/velocity2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Velocity"/>
-                <RadioButton android:id="@+id/none2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="None"/>
-            </RadioGroup>
+                android:text="Save Excel"
+                android:onClick="saveExcel"/>
+
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_weight="3"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
             <Button
                 android:id="@+id/set"
                 android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:layout_width="match_parent"
                 android:text="Set View"
                 android:onClick="setView"/>
 
-            <EditText
-                android:id="@+id/letter"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"/>
-
-            <!--<EditText-->
-                <!--android:id="@+id/phone"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="0dp"-->
-                <!--android:layout_weight="1"-->
-                <!--android:inputType="phone"-->
-                <!--android:focusable="false"-->
-                <!--android:focusableInTouchMode="false" />-->
-
-            <Button
-                android:id="@+id/keyboard"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:text="Open KB"
-                android:onClick="openKeyboard"/>
-
-            <Button
-                android:id="@+id/save"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:text="Save Excel"
-                android:onClick="saveExcel"/>
         </LinearLayout>
 
     </LinearLayout>
@@ -197,7 +97,7 @@
         android:id="@+id/draw"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
+        android:layout_weight="6"
         android:background="#ffc9c9c9"/>
 
     <LinearLayout

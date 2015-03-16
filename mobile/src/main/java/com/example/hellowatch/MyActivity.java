@@ -5,21 +5,17 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.opengl.Matrix;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -34,12 +30,11 @@ import com.google.android.gms.wearable.Wearable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Boolean;
+import java.util.Calendar;
 import java.util.Date;
 import jxl.*;
 import jxl.write.*;
 import jxl.write.Number;
-
-import java.lang.reflect.Array;
 
 
 public class MyActivity extends ActionBarActivity implements
@@ -49,7 +44,6 @@ public class MyActivity extends ActionBarActivity implements
 
     private GoogleApiClient mGoogleApiClient;
     private DataMap dataMap;
-    private int testId = R.id.test;
     boolean run = false;
     private ImageView drawingImageView;
     private int[] currentPoint;
@@ -81,6 +75,8 @@ public class MyActivity extends ActionBarActivity implements
     private WritableSheet worksheet;
     private EditText letter;
     private boolean touchFlag;
+    private boolean fileOpen;
+    Button excelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,15 +89,10 @@ public class MyActivity extends ActionBarActivity implements
                 .addOnConnectionFailedListener(this)
                 .build();
 
-        try {
-            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
-            worksheet = workbook.createSheet("First Sheet", 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        fileOpen = false;
         touchFlag =false;
-
+        excelButton = (Button) findViewById(R.id.excel);
+        excelButton.setText("Open Excel");
         letter = (EditText)findViewById(R.id.letter);
         resetDrawing();
     }
@@ -115,13 +106,13 @@ public class MyActivity extends ActionBarActivity implements
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.v("myTag", "Mobile: Connected to Google Api Service");
-        show("Connected to Google", testId);
+        show("Connected to Google", R.id.test1);
         Wearable.DataApi.addListener(mGoogleApiClient, this);
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        show("Connection is Suspended", testId);
+        show("Connection is Suspended", R.id.test1);
     }
 
     @Override
@@ -171,114 +162,56 @@ public class MyActivity extends ActionBarActivity implements
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        show("Connection failed!", testId);
-    }
-
-    public void show(String s, int id){
-        TextView t = (TextView) findViewById(id);
-        t.setText(s);
-    }
-
-    public boolean onTouchEvent(MotionEvent event){
-        int action = MotionEventCompat.getActionMasked(event);
-
-        switch(action){
-            case (MotionEvent.ACTION_DOWN):
-                Log.v("TouchFlag", "true");
-                touchFlag = true;
-                break;
-
-            case (MotionEvent.ACTION_UP):
-                Log.v("TouchFlag", "false");
-                touchFlag = false;
-                break;
-        }
-        return super.onTouchEvent(event);
+        show("Connection failed!", R.id.test1);
     }
 
     public void log(DataMap dataMap){
         long time = dataMap.getLong("time");
-
         run = dataMap.getBoolean("run");
 
-        //show("Run: "+run, R.id.act);
+        show("Run: "+run, R.id.test2);
+
+        dataCounter++;
 
         if(run == true){
-            dataCounter++;
-            timeDiff = (time - currentTime)/1000f ;
 
-            float[] accRotated = new float[4];
-            float[] accNotRotated = new float[4];
             float[] acc = dataMap.getFloatArray("acc");
             float[] gyro = dataMap.getFloatArray("gyro");
 
-            //float[] orgAcc = dataMap.getFloatArray("orgAcc");
-            double angle= dataMap.getDouble("angle");
-            double angle1= dataMap.getDouble("angle1");
-            double angle2= dataMap.getDouble("angle2");
-            float[] RotationM = {   (float)Math.cos(angle) , (float)Math.sin(angle), 0, 0,
-                                   -(float)Math.sin(angle) , (float)Math.cos(angle), 0, 0,
-                                    0                      , 0                     , 1, 0,
-                                    0                      , 0                     , 0, 0  };
-            System.arraycopy(acc,0,accNotRotated,0,3);
-            accNotRotated[3] = 0;
+            show("Is touching: "+touchFlag, R.id.test3);
 
-            Matrix.multiplyMV(accRotated,0, RotationM,0, accNotRotated,0);
+            if(fileOpen) {
+                for (int i = 0; i < 3; i++) {
+                    Number t = new Number(0, dataCounter, time);
+                    Number a = new Number(i + 2, dataCounter, gyro[i]);
+                    Number b = new Number(i + 6, dataCounter, acc[i]);
+                    Label l1 = new Label(10, dataCounter, Boolean.toString(touchFlag));
+                    Label l2 = new Label(12, dataCounter, letter.getText().toString());
 
-            show("Press: "+touchFlag, testId);
-            //show("Angle: "+ (int) Math.round(Math.toDegrees(angle )), testId);
-            show("Angle: "+ (int) Math.round(Math.toDegrees(angle1)), R.id.act);
-            show("Angle: "+ (int) Math.round(Math.toDegrees(angle2)), R.id.onBoard);
-
-            for(int i=0;i<3;i++){
-                Number t = new Number(0, dataCounter, time);
-                Number a = new Number(i+2, dataCounter, gyro[i]);
-                Number b = new Number(i+6, dataCounter, acc[i]);
-                Label l1 = new Label(10, dataCounter, Boolean.toString(touchFlag));
-                Label l2 = new Label(12, dataCounter, letter.getText().toString());
-
-                try {
-                    worksheet.addCell(t);
-                    worksheet.addCell(a);
-                    worksheet.addCell(b);
-                    worksheet.addCell(l1);
-                    worksheet.addCell(l2);
-                } catch (WriteException e) {
-                    e.printStackTrace();
+                    try {
+                        worksheet.addCell(t);
+                        worksheet.addCell(a);
+                        worksheet.addCell(b);
+                        worksheet.addCell(l1);
+                        worksheet.addCell(l2);
+                    } catch (WriteException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-
             }
 
-           //show("On Board: "+onBoard, R.id.onBoard);
-//            if(absAcc1Flag)
-//                updateCanvas(ab, 1);
-//            if(linAcc1Flag)
-                updateCanvas(gyro, 1);
-//            if(vel1Flag)
-//                updateCanvas(init_vel, 1);
-//            if(absAcc2Flag)
-//                updateCanvas(ab, 4);
-//            if(linAcc2Flag)
-                updateCanvas(acc, 4);
-//            if(vel2Flag)
-//                updateCanvas(init_vel, 4);
+            updateCanvas(gyro, 1);
+            updateCanvas(acc, 4);
 
             drawingImageView.setImageBitmap(bitmap);
 
-            currentTime = time;
-
         }else{//End of the session
             drawVerticalLine();
-            dataCounter++;
         }
     }
 
     public void resetDrawing(){
-        currentTime = 0;
-        timeDiff = 0;
         c = 0;
-        startTime = new long[3];
 
         drawingImageView = (ImageView) this.findViewById(R.id.draw);
         bitmap = Bitmap.createBitmap(2000,2000,Bitmap.Config.ARGB_8888);
@@ -322,76 +255,61 @@ public class MyActivity extends ActionBarActivity implements
         c+=2;
         if(c > 2000)
             resetDrawing();
-        canvas.drawPoint(c, (int) Math.round(first[0] * 10) + (num*300), paint1);
-        canvas.drawPoint(c, (int) Math.round(first[1] * 10) + (num*300+300), paint2);
-        canvas.drawPoint(c, (int) Math.round(first[2] * 10) + (num*300+600), paint3);
+        canvas.drawPoint(c, Math.round(first[0] * 10) + (num*300)    , paint1);
+        canvas.drawPoint(c, Math.round(first[1] * 10) + (num*300+300), paint2);
+        canvas.drawPoint(c, Math.round(first[2] * 10) + (num*300+600), paint3);
     }
     public void drawVerticalLine(){
         canvas.drawLine(c,0,c,2000,paint4);
         c+=3;
     }
     public void setView(View v){
-        accFilFlag = false;
-        velFilFlag = false;
-        lineFlag = false;
-        vel1Flag = false;
-        absAcc2Flag = false;
-        linAcc2Flag = false;
-        vel2Flag = false;
-        CheckBox accFil = (CheckBox) findViewById(R.id.accFil);
-        CheckBox velFil = (CheckBox) findViewById(R.id.velFil);
-        CheckBox line = (CheckBox) findViewById(R.id.line);
-        RadioGroup g1 = (RadioGroup) findViewById(R.id.g1);
-        RadioGroup g2 = (RadioGroup) findViewById(R.id.g2);
-        int g1Checked = g1.getCheckedRadioButtonId();
-        int g2Checked = g2.getCheckedRadioButtonId();
-
-        try {
-            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
-            worksheet = workbook.createSheet("First Sheet", 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //dataCounter = 0;
-        switch(g1Checked){
-            case R.id.absAcc1:
-                break;
-            case R.id.linAcc1:
-                break;
-            case R.id.velocity1:
-                vel1Flag = true;
-                break;
-        }
-        switch(g2Checked){
-            case R.id.absAcc2:
-                absAcc2Flag = true;
-                break;
-            case R.id.linAcc2:
-                linAcc2Flag = true;
-                break;
-            case R.id.velocity2:
-                vel2Flag = true;
-                break;
-        }
-        if(accFil.isChecked())
-            accFilFlag = true;
-        if(velFil.isChecked())
-            velFilFlag = true;
-        if(line.isChecked())
-            lineFlag = true;
         resetDrawing();
+    }
+
+    public void show(String s, int id){
+        TextView t = (TextView) findViewById(id);
+        t.setText(s);
+    }
+
+    public boolean onTouchEvent(MotionEvent event){
+        int action = MotionEventCompat.getActionMasked(event);
+
+        switch(action){
+            case (MotionEvent.ACTION_DOWN):
+                touchFlag = true;
+                break;
+
+            case (MotionEvent.ACTION_UP):
+                touchFlag = false;
+                break;
+        }
+        return super.onTouchEvent(event);
     }
 
     public void saveExcel(View view) {
         dataCounter = 0;
-        try {
-            workbook.write();
-            workbook.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (WriteException e) {
-            e.printStackTrace();
+        fileOpen = !fileOpen;
+        excelButton.setText(fileOpen?"Save Excel":"Open Excel");
+        if(!fileOpen) {
+            try {
+                workbook.write();
+                workbook.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (WriteException e) {
+                e.printStackTrace();
+            }
+        }else{
+            Date date = new Date();
+            try {
+                workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), date.getTime()+".xls"));
+                worksheet = workbook.createSheet("First Sheet", 0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
 }

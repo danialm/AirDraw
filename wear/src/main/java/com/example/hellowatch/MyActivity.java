@@ -32,14 +32,11 @@ public class MyActivity extends Activity implements
     private SensorManager mSensorManager;
     private SensorEventListener mSensorListener;
     private float[] DataA;
-    private float[] DataG;
     private Button button;
     private boolean flag = false;
     private PutDataMapRequest dataMap;
 
     private GoogleApiClient googleClient;
-    private long startTime;
-    private double[] angle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +50,6 @@ public class MyActivity extends Activity implements
             }
         });
         DataA = new float[3];
-        DataG = new float[3];
-        angle = new double[3];
         // Build a new GoogleApiClient
         googleClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -74,58 +69,19 @@ public class MyActivity extends Activity implements
             public void onSensorChanged(SensorEvent event) {
                 Date date = new Date();
                 switch (event.sensor.getType()) {
-//                    case Sensor.TYPE_GRAVITY:
-//                        DataG = lowPass(event.values, DataG);
-//                        angle = updateAngle(DataG);
-//                        break;
-//                    case Sensor.TYPE_LINEAR_ACCELERATION:
-//                        DataA = lowPass(event.values, DataA);
-//                        if (inSession(DataA)) {
-//                            //if(true){
-//                            dataMap.getDataMap().putFloatArray("orgAcc", event.values);
-//                            dataMap.getDataMap().putFloatArray("acc", DataA);
-//                            dataMap.getDataMap().putLong("time", date.getTime());
-//                            dataMap.getDataMap().putDouble("angle", angle[0]);
-//                            dataMap.getDataMap().putDouble("angle1", angle[1]);
-//                            dataMap.getDataMap().putDouble("angle2", angle[2]);
-//                            dataMap.getDataMap().putBoolean("run", true);
-//
-//                            PutDataRequest request = dataMap.asPutDataRequest();
-//                            Wearable.DataApi.putDataItem(googleClient, request);
-//                        } else {
-//                            DataA = new float[3];
-//                            DataG = new float[3];
-//                            if (dataMap.getDataMap().getBoolean("run")) {
-//                                dataMap.getDataMap().putBoolean("run", false);
-//                                PutDataRequest request = dataMap.asPutDataRequest();
-//                                Wearable.DataApi.putDataItem(googleClient, request);
-//                            }
-//                        }
-//                        break;
                     case Sensor.TYPE_ACCELEROMETER:
                         System.arraycopy(event.values,0, DataA,0, 3);
                         break;
                     case Sensor.TYPE_GYROSCOPE:
-                        if(true){
-                            dataMap.getDataMap().putFloatArray("gyro", event.values);
-                            dataMap.getDataMap().putFloatArray("acc", DataA);
-                            dataMap.getDataMap().putLong("time", date.getTime());
-                            dataMap.getDataMap().putDouble("angle", angle[0]);
-                            dataMap.getDataMap().putDouble("angle1", angle[1]);
-                            dataMap.getDataMap().putDouble("angle2", angle[2]);
-                            dataMap.getDataMap().putBoolean("run", true);
 
-                            PutDataRequest request = dataMap.asPutDataRequest();
-                            Wearable.DataApi.putDataItem(googleClient, request);
-                        } else {
-                            DataA = new float[3];
-                            DataG = new float[3];
-                            if (dataMap.getDataMap().getBoolean("run")) {
-                                dataMap.getDataMap().putBoolean("run", false);
-                                PutDataRequest request = dataMap.asPutDataRequest();
-                                Wearable.DataApi.putDataItem(googleClient, request);
-                            }
-                        }
+                        dataMap.getDataMap().putFloatArray("gyro", event.values);
+                        dataMap.getDataMap().putFloatArray("acc", DataA);
+                        dataMap.getDataMap().putLong("time", date.getTime());
+                        dataMap.getDataMap().putBoolean("run", true);
+
+                        PutDataRequest request = dataMap.asPutDataRequest();
+                        Wearable.DataApi.putDataItem(googleClient, request);
+
                         break;
 
                 }
@@ -133,63 +89,6 @@ public class MyActivity extends Activity implements
 
         };
 
-    }
-
-    private double[] updateAngle(float[] values) {
-        if(values == null) return null;
-        double[] g = new double[3];
-        double norm_Of_g = Math.sqrt(values[0] * values[0] + values[1] * values[1] + values[2] * values[2]);
-
-        // Normalize the accelerometer vector
-        g[0] = values[0] / norm_Of_g;
-        g[1] = values[1] / norm_Of_g;
-        g[2] = values[2] / norm_Of_g;
-
-        return new double[]{Math.atan2(g[0], g[1]), Math.atan2(g[1], g[0]), Math.atan2(g[2], g[1])};
-    }
-
-    private boolean inSession(float[] acc) {
-        if(sessionStart(acc)) {
-            startTime = new Date().getTime();
-        }
-        if(startTime == 0)
-            return false;
-        if(new Date().getTime() - startTime < 400)
-            return true;
-        return false;
-    }
-
-    private Boolean sessionStart(float[] acc) {
-        if(Math.sqrt(acc[0]*acc[0]+acc[1]*acc[1]+acc[2]*acc[2])>1) return true;
-        else return false;
-    }
-
-    public float[] lowPass( float[] input, float[] output ) {
-        final float alpha = 0.1f;
-        if ( output == null ){
-            return input;
-        }
-
-        for ( int i=0; i<input.length; i++ ) {
-            output[i] = output[i] + alpha * (input[i] - output[i]);
-        }
-        return output;
-    }
-
-    public float[] lowPass2( float[] input, float[] output ) {
-        if ( output == null ){
-            return input;
-        }
-
-        for ( int i=0; i<input.length; i++ ) {
-            if(Math.abs(input[i]-output[i])<1){
-                output[i] = output[i];
-            }else {
-                Log.v("", Integer.toString(i)+(input[i]-output[i]));
-                output[i] = output[i]+(input[i]-output[i])/2;
-            }
-        }
-        return output;
     }
 
     @Override
@@ -209,8 +108,6 @@ public class MyActivity extends Activity implements
                     mTextView.setText("Sending data...");
                     button.setText("Pause!");
 
-//                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SENSOR_DELAY);
-//                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY);
                     mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SENSOR_DELAY);
                     mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SENSOR_DELAY);
                 }else {
