@@ -74,40 +74,15 @@ public class MyActivity extends Activity implements
             public void onSensorChanged(SensorEvent event) {
                 Date date = new Date();
                 switch (event.sensor.getType()) {
-//                    case Sensor.TYPE_GRAVITY:
-//                        DataG = lowPass(event.values, DataG);
-//                        angle = updateAngle(DataG);
-//                        break;
-//                    case Sensor.TYPE_LINEAR_ACCELERATION:
-//                        DataA = lowPass(event.values, DataA);
-//                        if (inSession(DataA)) {
-//                            //if(true){
-//                            dataMap.getDataMap().putFloatArray("orgAcc", event.values);
-//                            dataMap.getDataMap().putFloatArray("acc", DataA);
-//                            dataMap.getDataMap().putLong("time", date.getTime());
-//                            dataMap.getDataMap().putDouble("angle", angle[0]);
-//                            dataMap.getDataMap().putDouble("angle1", angle[1]);
-//                            dataMap.getDataMap().putDouble("angle2", angle[2]);
-//                            dataMap.getDataMap().putBoolean("run", true);
-//
-//                            PutDataRequest request = dataMap.asPutDataRequest();
-//                            Wearable.DataApi.putDataItem(googleClient, request);
-//                        } else {
-//                            DataA = new float[3];
-//                            DataG = new float[3];
-//                            if (dataMap.getDataMap().getBoolean("run")) {
-//                                dataMap.getDataMap().putBoolean("run", false);
-//                                PutDataRequest request = dataMap.asPutDataRequest();
-//                                Wearable.DataApi.putDataItem(googleClient, request);
-//                            }
-//                        }
-//                        break;
-                    case Sensor.TYPE_ACCELEROMETER:
-                        System.arraycopy(event.values,0, DataA,0, 3);
+                    case Sensor.TYPE_GRAVITY:
+                        DataG = lowPass(event.values, DataG);
+                        angle = updateAngle(DataG);
                         break;
-                    case Sensor.TYPE_GYROSCOPE:
-                        if(true){
-                            dataMap.getDataMap().putFloatArray("gyro", event.values);
+                    case Sensor.TYPE_LINEAR_ACCELERATION:
+                        DataA = lowPass(event.values, DataA);
+                        if (inSession(DataA)) {
+                            //if(true){
+                            dataMap.getDataMap().putFloatArray("orgAcc", event.values);
                             dataMap.getDataMap().putFloatArray("acc", DataA);
                             dataMap.getDataMap().putLong("time", date.getTime());
                             dataMap.getDataMap().putDouble("angle", angle[0]);
@@ -209,10 +184,8 @@ public class MyActivity extends Activity implements
                     mTextView.setText("Sending data...");
                     button.setText("Pause!");
 
-//                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SENSOR_DELAY);
-//                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY);
-                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SENSOR_DELAY);
-                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SENSOR_DELAY);
+                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SENSOR_DELAY);
+                    mSensorManager.registerListener(mSensorListener, mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY);
                 }else {
                     mTextView.setText("Not sending data!");
                     button.setText("Start!");
