@@ -19,7 +19,6 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import java.nio.channels.DatagramChannel;
 import java.util.Date;
 
 public class MyActivity extends Activity implements
@@ -27,7 +26,6 @@ public class MyActivity extends Activity implements
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final int SENSOR_DELAY = SensorManager.SENSOR_DELAY_UI;
-
     private TextView mTextView;
     private SensorManager mSensorManager;
     private SensorEventListener mSensorListener;
@@ -35,7 +33,6 @@ public class MyActivity extends Activity implements
     private Button button;
     private boolean flag = false;
     private PutDataMapRequest dataMap;
-
     private GoogleApiClient googleClient;
 
     @Override

@@ -1,6 +1,5 @@
 package com.example.hellowatch;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -30,7 +29,6 @@ import com.google.android.gms.wearable.Wearable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Boolean;
-import java.util.Calendar;
 import java.util.Date;
 import jxl.*;
 import jxl.write.*;
@@ -46,9 +44,6 @@ public class MyActivity extends ActionBarActivity implements
     private DataMap dataMap;
     boolean run = false;
     private ImageView drawingImageView;
-    private int[] currentPoint;
-    private long currentTime;
-    private float timeDiff;
     private Canvas canvas;
     private Bitmap bitmap;
     private Paint paint1;
@@ -56,19 +51,6 @@ public class MyActivity extends ActionBarActivity implements
     private Paint paint3;
     private Paint paint;
     private int c;
-    private float[] addUpAcc;
-    private float[] velocity;
-    private int[] d;
-    private float init_vel[];
-    private long [] startTime;
-    private boolean accFilFlag;
-    private boolean velFilFlag;
-    private boolean vel1Flag;
-    private boolean absAcc2Flag;
-    private boolean linAcc2Flag;
-    private boolean vel2Flag;
-    private boolean lineFlag;
-    private boolean onBoard;
     private Paint paint4;
     private int dataCounter;
     private WritableWorkbook workbook;
