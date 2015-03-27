@@ -80,14 +80,15 @@ public class MyActivity extends Activity implements
                         break;
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         DataA = lowPass(event.values, DataA);
-                        if (inSession(DataA)) {
-                            //if(true){
+                        //if (inSession(DataA)) {
+                        if(true){
                             dataMap.getDataMap().putFloatArray("orgAcc", event.values);
                             dataMap.getDataMap().putFloatArray("acc", DataA);
                             dataMap.getDataMap().putLong("time", date.getTime());
                             dataMap.getDataMap().putDouble("angle", angle[0]);
                             dataMap.getDataMap().putDouble("angle1", angle[1]);
                             dataMap.getDataMap().putDouble("angle2", angle[2]);
+                            dataMap.getDataMap().putBoolean("session", inSession(DataA));
                             dataMap.getDataMap().putBoolean("run", true);
 
                             PutDataRequest request = dataMap.asPutDataRequest();

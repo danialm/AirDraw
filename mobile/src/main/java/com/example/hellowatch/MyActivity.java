@@ -169,6 +169,7 @@ public class MyActivity extends ActionBarActivity implements
             double angle= dataMap.getDouble("angle");
             double angle1= dataMap.getDouble("angle1");
             double angle2= dataMap.getDouble("angle2");
+            boolean session= dataMap.getBoolean("session");
             float[] RotationM = {   (float)Math.cos(angle) , (float)Math.sin(angle), 0, 0,
                                    -(float)Math.sin(angle) , (float)Math.cos(angle), 0, 0,
                                     0                      , 0                     , 1, 0,
@@ -188,14 +189,16 @@ public class MyActivity extends ActionBarActivity implements
                 Number t = new Number(0, dataCounter, time);
                 Number b = new Number(i+2, dataCounter, acc[i]);
                 Number c = new Number(i+6, dataCounter, accRotated[i]);
-                Label l = new Label(10, dataCounter, letter.getText().toString());
+                Label l1 = new Label(10, dataCounter, letter.getText().toString());
+                Label l2 = new Label(12, dataCounter, session+"");
 
                 try {
 
                     worksheet.addCell(t);
                     worksheet.addCell(b);
                     worksheet.addCell(c);
-                    worksheet.addCell(l);
+                    worksheet.addCell(l1);
+                    worksheet.addCell(l2);
 
                 } catch (WriteException e) {
                     e.printStackTrace();
