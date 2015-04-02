@@ -80,8 +80,7 @@ public class MyActivity extends Activity implements
                         break;
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         DataA = lowPass(event.values, DataA);
-                        //if (inSession(DataA)) {
-                        if(true){
+                        if (inSession(DataA)) {
                             dataMap.getDataMap().putFloatArray("orgAcc", event.values);
                             dataMap.getDataMap().putFloatArray("acc", DataA);
                             dataMap.getDataMap().putLong("time", date.getTime());
@@ -152,22 +151,6 @@ public class MyActivity extends Activity implements
         return output;
     }
 
-    public float[] lowPass2( float[] input, float[] output ) {
-        if ( output == null ){
-            return input;
-        }
-
-        for ( int i=0; i<input.length; i++ ) {
-            if(Math.abs(input[i]-output[i])<1){
-                output[i] = output[i];
-            }else {
-                Log.v("", Integer.toString(i)+(input[i]-output[i]));
-                output[i] = output[i]+(input[i]-output[i])/2;
-            }
-        }
-        return output;
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -192,10 +175,11 @@ public class MyActivity extends Activity implements
                     button.setText("Start!");
 
                     mSensorManager.unregisterListener(mSensorListener);
-
-                    dataMap.getDataMap().putBoolean("run", false);
-                    PutDataRequest request = dataMap.asPutDataRequest();
-                    Wearable.DataApi.putDataItem(googleClient, request);
+                    if(dataMap.getDataMap().getBoolean("run")) {
+                        dataMap.getDataMap().putBoolean("run", false);
+                        PutDataRequest request = dataMap.asPutDataRequest();
+                        Wearable.DataApi.putDataItem(googleClient, request);
+                    }
                 }
 
             }

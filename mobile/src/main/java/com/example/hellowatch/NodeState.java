@@ -1,5 +1,8 @@
 package com.example.hellowatch;
 
+import android.util.Log;
+
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 
 
@@ -11,6 +14,7 @@ public class NodeState {
     private ArrayList <Double> emissionLog;
     private ArrayList <SequenceScores> sequences;//used to handle multiple sequences
     private boolean original = true;
+    private double logAlpha;
 
     public NodeState(String t, String e, boolean ori){
         original = ori;
@@ -78,13 +82,32 @@ public class NodeState {
         return ss.getAlpha(t);
     }//end getAlpha(int seqIndex, int t)
 
+    /*public void setLogAlpha(int i, double a){
+        SequenceScores ss;
+        if(sequences.size() <= i){
+            ss= new SequenceScores();
+            ss.setLogAlpha(a);
+            sequences.add(i, ss);
+        }else{
+            ss = sequences.get(i);
+            ss.setLogAlpha(a);
+        }
+    }//end setLogAlpha(int i, double a)*///DM
+
+    public void setLogAlpha(int i, double a){
+        logAlpha = a;
+    }//end setLogAlpha(int i, double a)
 
     public double getLogAlpha(int seqIndex, int t){
-        SequenceScores ss = sequences.get(seqIndex);
-        return ss.getLogAlpha(t);
+        return logAlpha;
     }//end getLogAlpha(int seqIndex, int t)
 
-
+    /*public double getLogAlpha(int seqIndex, int t){
+        double out;
+        SequenceScores ss = sequences.get(seqIndex);
+        out = ss.getLogAlpha(t);
+        return out;
+    }//end getLogAlpha(int seqIndex, int t)*///DM
 
     public double getBeta(int seqIndex, int t){//seqIndex = sequence index; t = emmission
         SequenceScores ss = sequences.get(seqIndex);
@@ -131,18 +154,6 @@ public class NodeState {
             ss.setAlpha(a);
         }
     }//end setAlpha(int i, double a)
-
-    public void setLogAlpha(int i, double a){
-
-        if(sequences.size() <= i){
-            SequenceScores ss= new SequenceScores();
-            ss.setLogAlpha(a);
-            sequences.add(i, ss);
-        }else{
-            SequenceScores ss = sequences.get(i);
-            ss.setLogAlpha(a);
-        }
-    }//end setLogAlpha(int i, double a)
 
     //to be used for analyzing multiple sequences
     //i is the sequence to be analyzed, size is emission length for a sequence,  t is specific emission, b is beta

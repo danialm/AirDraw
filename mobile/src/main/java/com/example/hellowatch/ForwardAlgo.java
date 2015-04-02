@@ -1,5 +1,7 @@
 package com.example.hellowatch;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 
@@ -15,7 +17,7 @@ public class ForwardAlgo {
     ArrayList <String> descriptions; //list the description of the sequences to be analyzed
     HMM currHMM;
 
-    public ForwardAlgo(HMM hmm, String fileName){
+    public ForwardAlgo(HMM hmm, String seq){//DM: fileName->seq
 
 
         emission = new ArrayList<Integer>();
@@ -33,10 +35,10 @@ public class ForwardAlgo {
         emissionSet = currHMM.getEmissionSetArray();//list of possible emissions
 
         //get sequence here
-        FASTAReader fr = new FASTAReader(fileName);
+        /*FASTAReader fr = new FASTAReader(fileName);
         sequences = fr.getSequences();
-        descriptions = fr.getDescriptions();//will use later on
-
+        descriptions = fr.getDescriptions();//will use later on*///DM
+        sequences.add(seq);//DM
 
         for(int i = 0; i <sequences.size(); i++){//iterates through all the sequences to be analyze
 
@@ -138,18 +140,7 @@ public class ForwardAlgo {
                     logAlpha = firstPrevLogAlpha+firstLogTransition+Math.log(1+eSum)+currLogEP;
                     //QC code
                     if(logAlpha == Double.NEGATIVE_INFINITY){
-                        System.out.println("LogAlpha neg_infinity at t = "+t);
-                        //System.out.println("firstPrevLogAlpha: "+firstPrevLogAlpha);
-                        //System.out.println("firstLogTransition: "+firstLogTransition);
-                        //System.out.println("eSum: "+eSum);
-                        //System.out.println("Math.log(1+eSum): "+Math.log(1+eSum));
-                        //System.out.println("currLogEP: "+currLogEP);
-                        //System.out.println("currLogEP: "+currNode.getLogEmissionArray());
-                        //for(int it = 0; it < stateArray.size(); it++){
-                        //NodeState cnode = stateArray.get(it);
-                        //System.out.println("EA for node: "+it+"is: "+cnode.getLogEmissionArray());
-                        //System.out.println("TA for node: "+it+"is: "+cnode.getLogTransitionArray());
-                        //}
+                        Log.e("ForwardAlgo.calculateLogAlpha()","LogAlpha neg_infinity at t = "+t);
 
                     }
                     //end QC code

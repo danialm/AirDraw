@@ -1,5 +1,7 @@
 package com.example.hellowatch;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -226,6 +228,7 @@ public class HMM {
                 piArray.add(d);
                 piLogArray.add(Math.log(d));
                 //System.out.println(piArray.get(i-1));
+                Log.v("piArray inside HMM.parseJson", Double.toString(piArray.get(i - 1)));
             }
         }
         if (amatcher.find()){

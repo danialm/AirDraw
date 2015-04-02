@@ -5,12 +5,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.opengl.Matrix;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,8 +26,14 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Date;
+
 import jxl.*;
 import jxl.write.*;
 import jxl.write.Number;
@@ -51,10 +59,16 @@ public class MyActivity extends ActionBarActivity implements
     private Paint paint3;
     private Paint paint4;
     private int c;
-    private int dataCounter;
+    private int excelRowCounter;
+    private Button excelButton;
     private WritableWorkbook workbook;
     private WritableSheet worksheet;
     private EditText letter;
+    private ArrayList<Character> xSequence;
+    private ArrayList<Character> ySequence;
+    private ArrayList<Character> zSequence;
+    private TextView guessView;
+    private Signals SIGNALS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,16 +81,25 @@ public class MyActivity extends ActionBarActivity implements
                 .addOnConnectionFailedListener(this)
                 .build();
 
-        try {
-            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
-            fileOpen = true;
-            worksheet = workbook.createSheet("First Sheet", 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        excelButton = (Button) findViewById(R.id.excel_button);
+        guessView = (TextView) findViewById(R.id.guess_view);
 
         letter = (EditText)findViewById(R.id.letter);
         resetDrawing();
+
+        SIGNALS = new Signals();
+
+        //try {
+//            Field field = Signals.class.getField("ax");
+//            field.set(SIGNALS, d);
+//        } catch (NoSuchFieldException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        }
+
+
+
     }
 
     @Override
@@ -90,6 +113,9 @@ public class MyActivity extends ActionBarActivity implements
         Log.v("myTag", "Mobile: Connected to Google Api Service");
         show("Connected to Google", testId);
         Wearable.DataApi.addListener(mGoogleApiClient, this);
+        xSequence = new ArrayList<Character>();
+        ySequence = new ArrayList<Character>();
+        zSequence = new ArrayList<Character>();
     }
 
     @Override
@@ -156,9 +182,7 @@ public class MyActivity extends ActionBarActivity implements
         long time = dataMap.getLong("time");
 
         run = dataMap.getBoolean("run");
-
         //show("Run: "+run, R.id.act);
-        dataCounter++;
 
         if(run == true){
 
@@ -184,37 +208,172 @@ public class MyActivity extends ActionBarActivity implements
             show("Angle: "+ (int) Math.round(Math.toDegrees(angle1)), R.id.act);
             show("Angle: "+ (int) Math.round(Math.toDegrees(angle2)), R.id.onBoard);
 
-            for(int i=0;i<3;i++){
+            if(fileOpen == true) {//Building the excel file for log peruses.
+                excelRowCounter++;
+                for (int i = 0; i < 3; i++) {
 
-                Number t = new Number(0, dataCounter, time);
-                Number b = new Number(i+2, dataCounter, acc[i]);
-                Number c = new Number(i+6, dataCounter, accRotated[i]);
-                Label l1 = new Label(10, dataCounter, letter.getText().toString());
-                Label l2 = new Label(12, dataCounter, session+"");
+                    Number t = new Number(0, excelRowCounter, time);
+                    Number b = new Number(i + 2, excelRowCounter, acc[i]);
+                    Number c = new Number(i + 6, excelRowCounter, accRotated[i]);
+                    Label l1 = new Label(10, excelRowCounter, letter.getText().toString());
+                    Label l2 = new Label(12, excelRowCounter, session + "");
 
-                try {
+                    try {
 
-                    worksheet.addCell(t);
-                    worksheet.addCell(b);
-                    worksheet.addCell(c);
-                    worksheet.addCell(l1);
-                    worksheet.addCell(l2);
+                        worksheet.addCell(t);
+                        worksheet.addCell(b);
+                        worksheet.addCell(c);
+                        worksheet.addCell(l1);
+                        worksheet.addCell(l2);
 
-                } catch (WriteException e) {
-                    e.printStackTrace();
+                    } catch (WriteException e) {
+                        e.printStackTrace();
+                    }
+
                 }
-
             }
-
+            //Updating the view.
             updateCanvas(acc, 1);
             updateCanvas(accRotated, 4);
-
-            Log.v("Update canvas","pass");
             drawingImageView.setImageBitmap(bitmap);
 
-            Log.v("draw image","pass");
+            //Building the sequence.
+            xSequence.add(getCorrespondingChar(accRotated[0]));
+            ySequence.add(getCorrespondingChar(accRotated[1]));
+            zSequence.add(getCorrespondingChar(accRotated[2]));
+
+
         }else{//End of the session
-            drawVerticalLine();
+
+            if(fileOpen == true) {//Building the excel file for log peruses.
+                excelRowCounter++;
+            }
+
+            drawVerticalLine();//To separate session in the view.
+
+            String guess = getClosestLetterWithHM();
+            //String guess = getClosestLetterWithDTW();
+            guessView.append(guess);
+
+            //reset sequences for next letter
+            xSequence = new ArrayList<Character>();
+            ySequence = new ArrayList<Character>();
+            zSequence = new ArrayList<Character>();
+        }
+    }
+
+    private String readHmmFile(String fileName) {
+        //Find the directory for the SD Card using the API
+        File sdcard = Environment.getExternalStorageDirectory();
+
+        //Get the text file
+        File file = new File(sdcard, "hmm/"+fileName+".hmm");
+
+        //Read text from file
+        StringBuilder text = new StringBuilder();
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+                text.append('\n');
+            }
+            br.close();
+        }
+        catch (IOException e) {
+            Log.e("readHmmFile() Error",e.toString());
+        }
+
+        return text.toString();
+    }
+
+    private String ArrayListToString(ArrayList<Character> al) {
+        String s = "";
+        for(char i: al){
+            s+=i;
+        }
+        return s;
+    }
+
+    private Character getCorrespondingChar(float v) {
+        if(v>6){
+            return 'a';
+        }else
+        if(v>5.5){
+            return 'b';
+        }else
+        if(v>5){
+            return 'c';
+        }else
+        if(v>4.5){
+            return 'd';
+        }else
+        if(v>4){
+            return 'e';
+        }else
+        if(v>3.5){
+            return 'f';
+        }else
+        if(v>3){
+            return 'g';
+        }else
+        if(v>2.5){
+            return 'h';
+        }else
+        if(v>2){
+            return 'i';
+        }else
+        if(v>1.5){
+            return 'j';
+        }else
+        if(v>1){
+            return 'k';
+        }else
+        if(v>0.5){
+            return 'l';
+        }else
+        if(v>0){
+            return 'm';
+        }else
+        if(v>-0.5){
+            return 'n';
+        }else
+        if(v>-1){
+            return 'o';
+        }else
+        if(v>-1.5){
+            return 'p';
+        }else
+        if(v>-2){
+            return 'q';
+        }else
+        if(v>-2.5){
+            return 'r';
+        }else
+        if(v>-3){
+            return 's';
+        }else
+        if(v>-3.5){
+            return 't';
+        }else
+        if(v>-4){
+            return 'u';
+        }else
+        if(v>-4.5){
+            return 'v';
+        }else
+        if(v>-5){
+            return 'w';
+        }else
+        if(v>-5.5){
+            return 'x';
+        }else
+        if(v>-6){
+            return 'y';
+        }else{
+            return 'z';
         }
     }
 
@@ -270,35 +429,86 @@ public class MyActivity extends ActionBarActivity implements
         canvas.drawPoint(c, Math.round(data[2] * 10) + (num*300+600), paint3);
     }
     public void drawVerticalLine(){
-        canvas.drawLine(c,0,c,2000,paint4);
+        canvas.drawLine(c, 0, c, 2000, paint4);
         c+=3;
     }
     public void setView(View v){
-
-        try {
-            workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), "output.xls"));
-            fileOpen = true;
-            worksheet = workbook.createSheet("First Sheet", 0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        guessView.setText("");
         resetDrawing();
     }
 
-    public void saveExcel(View view) {
-        dataCounter = 0;
+    public void excelManager(View view) {
+        Date date = new Date();
         if (fileOpen == true) {
             try {
                 workbook.write();
                 workbook.close();
-                fileOpen = false;
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (WriteException e) {
                 e.printStackTrace();
             }
+            excelButton.setText("Open Excel");
+        }else{
+            try {
+                workbook = Workbook.createWorkbook(new File(this.getBaseContext().getFilesDir(), Long.toString(date.getTime())+".xls"));
+                worksheet = workbook.createSheet("First Sheet", 0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            excelRowCounter = 0;
+            excelButton.setText("Save Excel");
         }
+        fileOpen = !fileOpen;
     }
 
+    public String getClosestLetterWithHM() {
+
+        char[] alphabet = new char[]{'a','j','w','z','b'};//,'f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+        String xString = ArrayListToString(xSequence);
+        String yString = ArrayListToString(ySequence);
+        String zString = ArrayListToString(zSequence);
+        char closestLetter = '!';
+        double min = Double.MAX_VALUE;
+
+        for(char ch : alphabet){
+            ForwardAlgo xFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"x"), false), xString);
+            ForwardAlgo yFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"y"), false), yString);
+            ForwardAlgo zFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"z"), false), zString);
+            double res = Math.abs(xFoAl.getLogScore(0)+yFoAl.getLogScore(0) + zFoAl.getLogScore(0));
+            if (res<min) {
+                min = res;
+                closestLetter = ch;
+            }
+        }
+
+        return Character.toString(closestLetter);
+    }
+
+    public String getClosestLetterWithDTW() {
+
+        char[] alphabet = new char[]{'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+        String xString = ArrayListToString(xSequence);
+        String yString = ArrayListToString(ySequence);
+        String zString = ArrayListToString(zSequence);
+        char closestLetter = '!';
+        double min = Double.MAX_VALUE;
+
+        Log.v("x", xString);
+        Log.v("y", yString);
+        Log.v("z", zString);
+
+        for(char ch : alphabet){
+            ForwardAlgo xFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"x"), false), xString);
+            ForwardAlgo yFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"y"), false), yString);
+            ForwardAlgo zFoAl = new ForwardAlgo(new HMM(readHmmFile(ch+"z"), false), zString);
+            double res = yFoAl.getLogScore(0) + zFoAl.getLogScore(0);
+            if (res < min) {
+                min = res;
+                closestLetter = ch;
+            }
+        }
+
+        return Character.toString(closestLetter);
+    }
 }
